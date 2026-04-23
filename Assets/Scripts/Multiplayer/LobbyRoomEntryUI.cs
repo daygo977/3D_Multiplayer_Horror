@@ -12,11 +12,18 @@ public class LobbyRoomEntryUI : MonoBehaviour
     [SerializeField] private TMP_Text lobbyNameText;
     [SerializeField] private Button joinButton;
 
+    /// <summary>
+    /// Fills room row with lobby name and assigns click action.
+    /// </summary>
     public void Setup(string lobbyName, UnityAction onJoinClicked)
     {
-        lobbyNameText.text = lobbyName;
+        if (lobbyNameText != null)
+            lobbyNameText.text = lobbyName;
 
-        joinButton.onClick.RemoveAllListeners();
-        joinButton.onClick.AddListener(onJoinClicked);
+        if (joinButton != null)
+        {
+            joinButton.onClick.RemoveAllListeners();
+            joinButton.onClick.AddListener(onJoinClicked);
+        }
     }
 }
