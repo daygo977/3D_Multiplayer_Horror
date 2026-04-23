@@ -25,23 +25,31 @@ public class LobbyBrowseUI : MonoBehaviour
     private void Start()
     {
         //Hook up button events
-        backButton.onClick.AddListener(OnBackPressed);
-        createLobbyButton.onClick.AddListener(OnCreateLobbyPressed);
-        refreshButton.onClick.AddListener(OnRefreshPressed);
+        if (backButton != null)
+            backButton.onClick.AddListener(OnBackPressed);
+
+        if (createLobbyButton != null)
+            createLobbyButton.onClick.AddListener(OnCreateLobbyPressed);
+
+        if (refreshButton != null)
+            refreshButton.onClick.AddListener(OnRefreshPressed);
 
         //Load saved player name if one exists
         LoadSavedPlayerName();
-
         //Temp: make fake rooms so  to test  UI layout
         PopulateTestRooms();
     }
 
     private void OnDestroy()
     {
-        //Clean listeners when object is destroyed
-        backButton.onClick.RemoveListener(OnBackPressed);
-        createLobbyButton.onClick.RemoveListener(OnCreateLobbyPressed);
-        refreshButton.onClick.RemoveListener(OnRefreshPressed);
+        if (backButton != null)
+            backButton.onClick.RemoveListener(OnBackPressed);
+
+        if (createLobbyButton != null)
+            createLobbyButton.onClick.RemoveListener(OnCreateLobbyPressed);
+
+        if (refreshButton != null)
+            refreshButton.onClick.RemoveListener(OnRefreshPressed);
     }
 
     private void OnBackPressed()
@@ -53,9 +61,10 @@ public class LobbyBrowseUI : MonoBehaviour
 
     private void OnCreateLobbyPressed()
     {
-        string playerName = playerNameField.text.Trim();
-        string lobbyName = lobbyNameField.text.Trim();
-        string password = passwordField.text.Trim();
+        //Read all input field values
+        string playerName = playerNameField != null ? playerNameField.text.Trim() : "";
+        string lobbyName = lobbyNameField != null ? lobbyNameField.text.Trim() : "";
+        string password = passwordField != null ? passwordField.text.Trim() : "";
 
         if (string.IsNullOrWhiteSpace(playerName))
         {
@@ -69,8 +78,9 @@ public class LobbyBrowseUI : MonoBehaviour
             return;
         }
 
+        //Save player name locally
         SavePlayerName(playerName);
-
+        //If password is set, then track it
         bool hasPassword = !string.IsNullOrWhiteSpace(password);
 
         Debug.Log($"Create Lobby clicked | Player: {playerName} | Lobby: {lobbyName} | HasPassword: {hasPassword}");
@@ -98,7 +108,7 @@ public class LobbyBrowseUI : MonoBehaviour
 
     private void LoadSavedPlayerName()
     {
-        if (PlayerPrefs.HasKey(playerNamePrefsKey))
+        if (playerNameField != null && PlayerPrefs.HasKey(playerNamePrefsKey))
         {
             playerNameField.text = PlayerPrefs.GetString(playerNamePrefsKey);
         }
@@ -110,11 +120,11 @@ public class LobbyBrowseUI : MonoBehaviour
 
         List<TestRoomData> fakeRooms = new List<TestRoomData>()
         {
-            new TestRoomData("HauntedHouse01", 1, 4, false),
-            new TestRoomData("BasementRun", 2, 4, true),
-            new TestRoomData("NightShift", 3, 4, false),
-            new TestRoomData("HospitalEscape", 1, 4, true),
-            new TestRoomData("SchoolCorridor", 4, 4, false)
+            new TestRoomData("HauntedHouse01"),
+            new TestRoomData("BasementRun"),
+            new TestRoomData("NightShift"),
+            new TestRoomData("HospitalEscape"),
+            new TestRoomData("SchoolCorridor")
         };
 
         foreach (TestRoomData room in fakeRooms)
@@ -125,7 +135,13 @@ public class LobbyBrowseUI : MonoBehaviour
 
     private void ClearLobbyList()
     {
-        for (int i = 0; i < lobbyListContent.childCount; i++)
+        if (lobbyListContent == null)
+        {
+            Debug.LogWarning("LobbyListContent is missing.");
+            return;
+        }
+
+        for (int i = lobbyListContent.childCount - 1; i >= 0; i--)
         {
             Destroy(lobbyListContent.GetChild(i).gameObject);
         }
@@ -144,13 +160,7 @@ public class LobbyBrowseUI : MonoBehaviour
         LobbyRoomEntryUI entryUI = entry.GetComponent<LobbyRoomEntryUI>();
         if (entryUI != null)
         {
-            entryUI.Setup(
-                roomData.RoomName,
-                roomData.CurrentPlayers,
-                roomData.MaxPlayers,
-                roomData.IsLocked,
-                () => OnJoinRoomPressed(roomData)
-            );
+            entryUI.Setup(roomData.RoomName, () => OnJoinRoomPressed(roomData));
         }
         else
         {
@@ -162,29 +172,17 @@ public class LobbyBrowseUI : MonoBehaviour
     {
         Debug.Log($"Join clicked for room: {roomData.RoomName}");
 
-        if (roomData.IsLocked)
-        {
-            Debug.Log("This room is password protected.");
-            //Later can show password popup here
-        }
-
-        //Later:
-        //await UnityLobbyManager.Instance.JoinLobbyAsync(roomData.LobbyId, enteredPassword);
+        // Later:
+        // await UnityLobbyManager.Instance.JoinLobbyAsync(...);
     }
 
     private class TestRoomData
     {
         public string RoomName;
-        public int CurrentPlayers;
-        public int MaxPlayers;
-        public bool IsLocked;
 
-        public TestRoomData(string roomName, int currentPlayers, int maxPlayers, bool isLocked)
+        public TestRoomData(string roomName)
         {
             RoomName = roomName;
-            CurrentPlayers = currentPlayers;
-            MaxPlayers = maxPlayers;
-            IsLocked = isLocked;
         }
     }
 }
