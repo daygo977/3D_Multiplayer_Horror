@@ -19,6 +19,6 @@
 
 **Beyond the Dragon’s Grasp** is a co-op, multiplayer, first-person horror dungeon game where players must explore, survive, and escape a dangerous environment. Players can play solo or with friends, navigating through a series of interconnected dungeon rooms filled with enemies, puzzles, and loot.
 
-The gameplay is structured around room-based progression. When players enter a room, doors lock behind them and they must complete a challenge—either defeating enemies or solving puzzles—to proceed. The game culminates in a final boss encounter against a dragon guarding the exit. Players can take on different roles, like warrior, mage, or archer, encouragining teamwork and strategy.
+The gameplay is structured around room-based progression. When players enter a room, doors lock behind them and they must complete a challenge—either defeating enemies or solving puzzles to proceed. The game culminates in a final boss encounter against a dragon guarding the exit. Players can take on different roles, like warrior, mage, or archer, encouragining teamwork and strategy.
 
 The game features a low poly aesthetic with a dark horror atmosphere. Instead of traditional background music, it uses randomized sound effects to create tension and unpredictability. Multiplayer is a key component, allowing players to host or join lobbies and experience the game cooperatively.
