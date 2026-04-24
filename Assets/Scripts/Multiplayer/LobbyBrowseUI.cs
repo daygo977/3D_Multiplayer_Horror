@@ -1,20 +1,9 @@
 using System.Collections.Generic;
 using TMPro;
+using Unity.Services.Lobbies.Models;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// Controls the Lobby Browse scene UI.
-///
-/// - Reads player/lobby/password input fields
-/// - Handles button clicks
-/// - Saves/loads player's name locally
-/// - Populates scrollable room list
-/// - Shows a password popup when trying to join a locked room
-///
-/// Right now version uses fake test rooms to finish UI first.
-/// Later, same script can call UnityLobbyManager for real lobby data.
-/// </summary>
 public class LobbyBrowseUI : MonoBehaviour
 {
     [Header("Input Fields")]
@@ -39,13 +28,12 @@ public class LobbyBrowseUI : MonoBehaviour
 
     [Header("Settings")]
     [SerializeField] private string playerNamePrefsKey = "PLAYER_NAME";
-    
-    //Stores room player is currently trying to join from popup.
-    private TestRoomData pendingRoomToJoin;
 
-    private void Start()
+    private Lobby pendingLobbyToJoin;
+
+    private async void Start()
     {
-        //Hook up button events
+        //button listeners
         if (backButton != null)
             backButton.onClick.AddListener(OnBackPressed);
 
@@ -61,14 +49,28 @@ public class LobbyBrowseUI : MonoBehaviour
         if (cancelPasswordButton != null)
             cancelPasswordButton.onClick.AddListener(OnCancelPasswordPressed);
 
-        //Load saved player name if one exists
+        //popup starts hidden
+        if (passwordPanel != null)
+            passwordPanel.SetActive(false);
+
+        //restore saved player name
         LoadSavedPlayerName();
-        //Temp: make fake rooms so  to test  UI layout
-        PopulateTestRooms();
+
+        //subscribe to real lobby list updates
+        if (UnityLobbyManager.Instance != null)
+        {
+            UnityLobbyManager.Instance.OnAvailableLobbiesChanged += RebuildLobbyList;
+            await UnityLobbyManager.Instance.RefreshAvailableLobbiesAsync();
+        }
+        else
+        {
+            Debug.LogWarning("UnityLobbyManager not found");
+        }
     }
 
     private void OnDestroy()
     {
+        //remove button listeners
         if (backButton != null)
             backButton.onClick.RemoveListener(OnBackPressed);
 
@@ -83,231 +85,216 @@ public class LobbyBrowseUI : MonoBehaviour
 
         if (cancelPasswordButton != null)
             cancelPasswordButton.onClick.RemoveListener(OnCancelPasswordPressed);
+
+        //unsubscribe from lobby updates
+        if (UnityLobbyManager.Instance != null)
+            UnityLobbyManager.Instance.OnAvailableLobbiesChanged -= RebuildLobbyList;
     }
 
     private void OnBackPressed()
     {
-        Debug.Log("Back pressed. Main menu not implemented yet.");
-        //Add later:
-        //SceneManager.LoadScene("MainMenu");
+        //placeholder until main menu exists
+        Debug.Log("Back pressed");
     }
 
-    private void OnCreateLobbyPressed()
+    private async void OnCreateLobbyPressed()
     {
-        //Read all input field values
+        //read inputs
         string playerName = playerNameField != null ? playerNameField.text.Trim() : "";
         string lobbyName = lobbyNameField != null ? lobbyNameField.text.Trim() : "";
         string password = passwordField != null ? passwordField.text.Trim() : "";
 
+        //basic validation
         if (string.IsNullOrWhiteSpace(playerName))
         {
-            Debug.LogWarning("Player name is required.");
+            Debug.LogWarning("Player name is required");
             return;
         }
 
         if (string.IsNullOrWhiteSpace(lobbyName))
         {
-            Debug.LogWarning("Lobby name is required.");
+            Debug.LogWarning("Lobby name is required");
             return;
         }
 
-        //Save player name locally
+        //save local name
         SavePlayerName(playerName);
-        //If password is set, then track it
-        bool hasPassword = !string.IsNullOrWhiteSpace(password);
 
-        Debug.Log($"Create Lobby clicked | Player: {playerName} | Lobby: {lobbyName} | HasPassword: {hasPassword}");
-
-        //Later this will call real lobby manager:
-        //await UnityLobbyManager.Instance.CreateLobbyAsync(playerName, lobbyName, password);
+        //create real lobby
+        if (UnityLobbyManager.Instance != null)
+            await UnityLobbyManager.Instance.CreateLobbyAsync(playerName, lobbyName, password);
     }
 
-    private void OnRefreshPressed()
+    private async void OnRefreshPressed()
     {
-        Debug.Log("Refresh clicked.");
-
-        //Temp: refresh fake test rooms
-        PopulateTestRooms();
-
-        //Later this will call real lobby manager:
-        //await UnityLobbyManager.Instance.RefreshLobbiesAsync();
+        //refresh real lobby list
+        if (UnityLobbyManager.Instance != null)
+            await UnityLobbyManager.Instance.RefreshAvailableLobbiesAsync();
     }
 
-    /// <summary>
-    /// Called when Enter is pressed on password popup.
-    /// Checks entered password against pending test room.
-    /// Later should call real join-lobby code.
-    /// </summary>
-    private void OnEnterPasswordPressed()
+    private async void OnEnterPasswordPressed()
     {
-        if (pendingRoomToJoin == null)
+        //guard pending lobby
+        if (pendingLobbyToJoin == null)
         {
-            Debug.LogWarning("No pending room to join.");
             ClosePasswordPanel();
             return;
         }
 
+        //read name and entered password
+        string playerName = playerNameField != null ? playerNameField.text.Trim() : "";
         string enteredPassword = inputPasswordField != null ? inputPasswordField.text.Trim() : "";
 
-        if (enteredPassword == pendingRoomToJoin.RoomPassword)
+        if (string.IsNullOrWhiteSpace(playerName))
         {
-            Debug.Log($"Correct password entered for room: {pendingRoomToJoin.RoomName}");
-            ClosePasswordPanel();
-
-            //Later:
-            //await UnityLobbyManager.Instance.JoinLobbyAsync(pendingRoomToJoin.LobbyId, enteredPassword);
-
-            Debug.Log($"Joining locked room: {pendingRoomToJoin.RoomName}");
+            Debug.LogWarning("Player name is required before joining");
+            return;
         }
-        else
+
+        SavePlayerName(playerName);
+
+        //try join protected lobby
+        if (UnityLobbyManager.Instance != null)
         {
-            Debug.LogWarning("Incorrect room password.");
+            bool joined = await UnityLobbyManager.Instance.JoinLobbyAsync(
+                pendingLobbyToJoin.Id,
+                playerName,
+                enteredPassword
+            );
+
+            if (joined)
+                ClosePasswordPanel();
         }
     }
 
-    /// <summary>
-    /// Called when Cancel is pressed on password popup.
-    /// </summary>
     private void OnCancelPasswordPressed()
     {
+        //close password popup
         ClosePasswordPanel();
     }
 
-    /// <summary>
-    /// Opens password popup for a locked room.
-    /// Clears any previously entered password.
-    /// </summary>
-    private void OpenPasswordPanel(TestRoomData roomData)
+    private void OpenPasswordPanel(Lobby lobby)
     {
-        pendingRoomToJoin = roomData;
+        //set pending lobby
+        pendingLobbyToJoin = lobby;
 
+        //clear old password
         if (inputPasswordField != null)
             inputPasswordField.text = "";
 
+        //show popup
         if (passwordPanel != null)
             passwordPanel.SetActive(true);
     }
 
-    /// <summary>
-    /// Closes password popup and clear pending room.
-    /// </summary>
     private void ClosePasswordPanel()
     {
-        pendingRoomToJoin = null;
+        //clear pending lobby
+        pendingLobbyToJoin = null;
 
+        //clear input
         if (inputPasswordField != null)
             inputPasswordField.text = "";
 
+        //hide popup
         if (passwordPanel != null)
             passwordPanel.SetActive(false);
     }
 
     private void SavePlayerName(string playerName)
     {
+        //save local name
         PlayerPrefs.SetString(playerNamePrefsKey, playerName);
         PlayerPrefs.Save();
     }
 
     private void LoadSavedPlayerName()
     {
+        //load local name
         if (playerNameField != null && PlayerPrefs.HasKey(playerNamePrefsKey))
-        {
             playerNameField.text = PlayerPrefs.GetString(playerNamePrefsKey);
-        }
     }
 
-    private void PopulateTestRooms()
+    private void RebuildLobbyList(List<Lobby> lobbies)
     {
+        //clear old rows
         ClearLobbyList();
 
-        List<TestRoomData> fakeRooms = new List<TestRoomData>()
-        {
-            new TestRoomData("HauntedHouse01", false, ""),
-            new TestRoomData("BasementRun", true, "1234"),
-            new TestRoomData("NightShift", false, ""),
-            new TestRoomData("HospitalEscape", true, "ghost"),
-            new TestRoomData("SchoolCorridor", false, "")
-        };
+        if (lobbies == null)
+            return;
 
-        foreach (TestRoomData room in fakeRooms)
+        //build rows from real lobby data
+        foreach (Lobby lobby in lobbies)
         {
-            CreateRoomEntry(room);
+            CreateRoomEntry(lobby);
         }
     }
 
-    /// <summary>
-    /// Clears all current room entries inside the scroll view content.
-    /// </summary>
     private void ClearLobbyList()
     {
+        //guard content ref
         if (lobbyListContent == null)
         {
-            Debug.LogWarning("LobbyListContent is missing.");
+            Debug.LogWarning("LobbyListContent is missing");
             return;
         }
 
+        //destroy old entries
         for (int i = lobbyListContent.childCount - 1; i >= 0; i--)
         {
             Destroy(lobbyListContent.GetChild(i).gameObject);
         }
     }
-    
-    /// <summary>
-    /// Instantiates one room entry prefab and fills it with room data.
-    /// </summary>
-    private void CreateRoomEntry(TestRoomData roomData)
+
+    private void CreateRoomEntry(Lobby lobby)
     {
+        //guard refs
         if (roomEntryPrefab == null || lobbyListContent == null)
         {
-            Debug.LogWarning("RoomEntryPrefab or LobbyListContent is missing.");
+            Debug.LogWarning("RoomEntryPrefab or LobbyListContent is missing");
             return;
         }
 
+        //spawn row
         GameObject entry = Instantiate(roomEntryPrefab, lobbyListContent);
 
+        //assign room name and click action
         LobbyRoomEntryUI entryUI = entry.GetComponent<LobbyRoomEntryUI>();
         if (entryUI != null)
         {
-            entryUI.Setup(roomData.RoomName, () => OnJoinRoomPressed(roomData));
+            entryUI.Setup(lobby.Name, () => OnJoinRoomPressed(lobby));
         }
         else
         {
-            Debug.LogWarning("Room entry prefab is missing LobbyRoomEntryUI.");
+            Debug.LogWarning("Room entry prefab is missing LobbyRoomEntryUI");
         }
     }
 
-    private void OnJoinRoomPressed(TestRoomData roomData)
+    private async void OnJoinRoomPressed(Lobby lobby)
     {
-        Debug.Log($"Join clicked for room: {roomData.RoomName}");
+        //read player name
+        string playerName = playerNameField != null ? playerNameField.text.Trim() : "";
 
-        if (roomData.HasPassword)
+        if (string.IsNullOrWhiteSpace(playerName))
         {
-            Debug.Log("This room is password protected.");
-            OpenPasswordPanel(roomData);
+            Debug.LogWarning("Player name is required before joining");
             return;
         }
 
-        Debug.Log($"Joining open room: {roomData.RoomName}");
+        SavePlayerName(playerName);
 
-        // Later:
-        // await UnityLobbyManager.Instance.JoinLobbyAsync(roomData.LobbyId);
-    }
+        //guard manager
+        if (UnityLobbyManager.Instance == null)
+            return;
 
-    /// <summary>
-    /// Temp local data class used only for fake UI testing.
-    /// Later will likely be replaced by real Unity Lobby data models.
-    /// </summary>
-    private class TestRoomData
-    {
-        public string RoomName;
-        public bool HasPassword;
-        public string RoomPassword;
-
-        public TestRoomData(string roomName, bool hasPassword, string roomPassword)
+        //open popup for protected lobbies
+        if (UnityLobbyManager.Instance.LobbyRequiresPassword(lobby))
         {
-            RoomName = roomName;
-            HasPassword = hasPassword;
-            RoomPassword = roomPassword;
+            OpenPasswordPanel(lobby);
+            return;
         }
+
+        //join open lobby
+        await UnityLobbyManager.Instance.JoinLobbyAsync(lobby.Id, playerName);
     }
 }

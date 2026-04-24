@@ -3664,6 +3664,55 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1823384219
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1823384221}
+  - component: {fileID: 1823384220}
+  m_Layer: 0
+  m_Name: UnityLobbyManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1823384220
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1823384219}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed4de1a183613314caafce4f8f6c74bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  lobbyBrowseSceneName: LobbyBrowse
+  lobbyRoomSceneName: LobbyRoom
+  maxPlayersPerLobby: 4
+  lobbyPollIntervalSeconds: 2
+  lobbyHeartbeatIntervalSeconds: 15
+--- !u!4 &1823384221
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1823384219}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1085.0713, y: 518.3636, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1882249755
 GameObject:
   m_ObjectHideFlags: 0
@@ -4393,7 +4442,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1102428727532551543, guid: 2abda124c5736594eb40f794a18ee9dc, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0.000022375465
+      value: 0.000060969112
       objectReference: {fileID: 0}
     - target: {fileID: 1277199353212778547, guid: 2abda124c5736594eb40f794a18ee9dc, type: 3}
       propertyPath: m_Pivot.x
@@ -4547,3 +4596,4 @@ SceneRoots:
   - {fileID: 1404748635}
   - {fileID: 426747261}
   - {fileID: 1446043907}
+  - {fileID: 1823384221}
