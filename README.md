@@ -39,3 +39,7 @@ The game features a low poly aesthetic with a dark horror atmosphere. Instead of
 - Unity (Game Engine)
 - C# (Scripting)
 - Unity Netcode / Multiplayer systems (lobby + player sync)
+
+## Potential area of needed assistance
+
+- Multiplayer synchronization is expected to be the main challenge, especially preventing desync between players during gameplay.
