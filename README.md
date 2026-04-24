@@ -22,3 +22,17 @@
 The gameplay is structured around room-based progression. When players enter a room, doors lock behind them and they must complete a challenge by either defeating enemies or solving puzzles to proceed. The game culminates in a final boss encounter against a dragon guarding the exit. Players can take on different roles, like warrior, mage, or archer, encouragining teamwork and strategy.
 
 The game features a low poly aesthetic with a dark horror atmosphere. Instead of traditional background music, it uses randomized sound effects to create tension and unpredictability. Multiplayer is a key component, allowing players to host or join lobbies and experience the game cooperatively.
+
+## Core Features and Elements
+
+- Co-op multiplayer (host/join lobby system)
+- First-person player controller
+- Dungeon exploration with multiple room types: Puzzle, Boss, etc.
+- Locked-room progression system
+- Player roles/classes with different abilities (planned)
+- Enemy AI and boss encounter (planned)
+- Horror atmosphere with dynamic sound effects
+- UI systems that include:
+  - Main menu (Play, Options, Exit)
+  - Lobby menu
+  - In-game UI (health, etc.)
