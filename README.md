@@ -36,3 +36,6 @@ The game features a low poly aesthetic with a dark horror atmosphere. Instead of
   - Main menu (Play, Options, Exit)
   - Lobby menu
   - In-game UI (health, etc.)
+- Unity (Game Engine)
+- C# (Scripting)
+- Unity Netcode / Multiplayer systems (lobby + player sync)
